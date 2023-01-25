@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = "mongodb://127.0.0.1:27017/qelos-calendly"
+}
+
+type AvailabilitiesDateOverrides {
+  id        String                                 @map("_id") @db.ObjectId
+  date      String
+  timeSlots AvailabilitiesDateOverridesTimeSlots[]
+}
+
+type AvailabilitiesDateOverridesTimeSlots {
+  id   String @map("_id") @db.ObjectId
+  from String
+  to   String
+}
+
+type AvailabilitiesWeekdays {
+  id          String                            @map("_id") @db.ObjectId
+  day         String
+  isAvailable Boolean
+  timeSlots   AvailabilitiesWeekdaysTimeSlots[]
+}
+
+type AvailabilitiesWeekdaysTimeSlots {
+  id   String @map("_id") @db.ObjectId
+  from String
+  to   String
+}
+
+type EventTypesCustomAvailability {
+  id            String                                      @map("_id") @db.ObjectId
+  dateOverrides EventTypesCustomAvailabilityDateOverrides[]
+  timezone      String
+  weekdays      EventTypesCustomAvailabilityWeekdays[]
+}
+
+type EventTypesCustomAvailabilityDateOverrides {
+  id        String                                               @map("_id") @db.ObjectId
+  date      String
+  timeSlots EventTypesCustomAvailabilityDateOverridesTimeSlots[]
+}
+
+type EventTypesCustomAvailabilityDateOverridesTimeSlots {
+  id   String @map("_id") @db.ObjectId
+  from String
+  to   String
+}
+
+type EventTypesCustomAvailabilityWeekdays {
+  id          String                                          @map("_id") @db.ObjectId
+  day         String
+  isAvailable Boolean
+  timeSlots   EventTypesCustomAvailabilityWeekdaysTimeSlots[]
+}
+
+type EventTypesCustomAvailabilityWeekdaysTimeSlots {
+  id   String @map("_id") @db.ObjectId
+  from String
+  to   String
+}
+
+type EventTypesDuration {
+  id    String @map("_id") @db.ObjectId
+  unit  String
+  value Int
+}
+
+type EventsGuests {
+  id    String  @map("_id") @db.ObjectId
+  email String
+  name  String?
+}
+
+type EventsInvitee {
+  id    String @map("_id") @db.ObjectId
+  email String
+  name  String
+  notes String
+}
+
+type UsersGoogle {
+  id          String   @map("_id") @db.ObjectId
+  accessToken String
+  expiresAt   DateTime @db.Date
+  expiresIn   Int
+  idToken     String
+  scope       String
+  tokenType   String
+}
+
+model availabilities {
+  id            String                        @id @default(auto()) @map("_id") @db.ObjectId
+  v             Int                           @map("__v")
+  createdAt     DateTime                      @db.Date
+  dateOverrides AvailabilitiesDateOverrides[]
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  deletedAt     Json?
+  isDefault     Boolean
+  isDeleted     Boolean?
+  name          String                        @unique(map: "name_1")
+  timezone      String
+  updatedAt     DateTime                      @db.Date
+  user          String                        @db.ObjectId
+  weekdays      AvailabilitiesWeekdays[]
+}
+
+model event_types {
+  id                 String                        @id @default(auto()) @map("_id") @db.ObjectId
+  v                  Int                           @map("__v")
+  availability       String?                       @db.ObjectId
+  color              String
+  createdAt          DateTime                      @db.Date
+  customAvailability EventTypesCustomAvailability?
+  deletedAt          DateTime?                     @db.Date
+  description        String?
+  duration           EventTypesDuration
+  isDeleted          Boolean?
+  link               String
+  name               String
+  status             String?
+  updatedAt          DateTime                      @db.Date
+  user               String                        @db.ObjectId
+
+  @@map("event-types")
+}
+
+model events {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int            @map("__v")
+  createdAt DateTime       @db.Date
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  deletedAt Json?
+  endTime   DateTime       @db.Date
+  eventType String         @db.ObjectId
+  guests    EventsGuests[]
+  invitee   EventsInvitee
+  startTime DateTime       @db.Date
+  status    String
+  timezone  String
+  updatedAt DateTime       @db.Date
+  user      String         @db.ObjectId
+}
+
+model users {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int         @map("__v")
+  createdAt DateTime    @db.Date
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  deletedAt Json?
+  email     String      @unique(map: "email_1")
+  google    UsersGoogle
+  updatedAt DateTime    @db.Date
+}
