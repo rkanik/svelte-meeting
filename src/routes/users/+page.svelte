@@ -1,6 +1,10 @@
 <script lang="ts">
-	import BaseInput from '$lib/components/base/BaseInput.svelte';
-	import { createForm } from '$lib/form';
+	import BaseInput from '$lib/components/base/BaseInput.svelte'
+	import BaseDataTable from '$lib/components/base/BaseDataTable.svelte'
+
+	import { z, zUser } from '$lib/zod'
+	import { createForm } from '$lib/form'
+	import { EyeClosed, EyeOpen, Plus } from 'radix-icons-svelte'
 	import {
 		Button,
 		Title,
@@ -9,42 +13,56 @@
 		TextInput,
 		Space,
 		Group,
-		Text,
 		CloseButton,
 		Divider,
 		theme,
-		ActionIcon,
-		ThemeIcon
-	} from '@svelteuidev/core';
-	import { EyeClosed, EyeOpen, Plus } from 'radix-icons-svelte';
-	import { z } from 'zod';
+		ActionIcon
+	} from '@svelteuidev/core'
+	import { trpc } from '$lib/trpc/client'
+	import type { PageData } from './$types'
+	import type { User } from '@prisma/client'
+
+	export let data: PageData
 
 	// Modal
-	let modal = false;
+	let modal = false
 	const onCloseModal = () => {
-		modal = false;
-	};
+		modal = false
+	}
 
 	// User
-	const form = createForm();
+	const form = createForm()
 
-	let isPasswordVisible = false;
-	const user = {
+	let isPasswordVisible = false
+	const newUser = () => ({
 		name: '',
 		email: '',
 		password: '',
 		passwordConfirmation: ''
-	};
+	})
+	let user = newUser()
 
 	const onSubmit = async (e: Event) => {
-		e.preventDefault();
+		e.preventDefault()
 
 		if (!(await form.validate())) {
-			return;
+			return
 		}
 
-		console.log({ user });
-	};
+		const createdUser = await trpc().users.create.mutate(user)
+		data.users = [createdUser as any, ...data.users]
+
+		modal = false
+		user = newUser()
+	}
+
+	const onDeleteUser = async (event: CustomEvent<User>) => {
+		console.log('onDeleteUser', user)
+		if (confirm('Are you sure you want to delete this user?')) {
+			await trpc().users.delete.mutate({ id: event.detail.id })
+			data.users = data.users.filter((user) => user.id != event.detail.id)
+		}
+	}
 </script>
 
 <div class="2xl:p-16 overflow-y-auto">
@@ -60,37 +78,40 @@
 		<form>
 			<Stack>
 				<BaseInput
+					{form}
 					bind:value={user.name}
 					let:field={{ attrs, onChange }}
-					{form}
-					schema={z.string().min(1, 'Name is required')}
-				>
-					<TextInput {...attrs} required label="Name" placeholder="John Doe" on:input={onChange} />
-				</BaseInput>
-
-				<BaseInput
-					bind:value={user.email}
-					let:field={{ attrs, onChange }}
-					{form}
-					schema={z.string().email('Please enter a valid email address')}
+					schema={zUser.create.shape.name}
 				>
 					<TextInput
 						{...attrs}
 						required
-						label="Email"
-						placeholder="john@doe.com"
+						label="Name"
+						placeholder="Enter full name"
 						on:input={onChange}
 					/>
 				</BaseInput>
 
 				<BaseInput
+					{form}
+					bind:value={user.email}
+					let:field={{ attrs, onChange }}
+					schema={zUser.create.shape.email}
+				>
+					<TextInput
+						{...attrs}
+						required
+						label="Email"
+						placeholder="Enter email address"
+						on:input={onChange}
+					/>
+				</BaseInput>
+
+				<BaseInput
+					{form}
 					bind:value={user.password}
 					let:field={{ attrs, onChange }}
-					{form}
-					schema={z
-						.string()
-						.min(8, 'Password must contain at least 8 characters')
-						.max(32, "Password can't contain more than 32 characters")}
+					schema={zUser.create.shape.password}
 				>
 					<TextInput
 						{...attrs}
@@ -117,9 +138,9 @@
 				</BaseInput>
 
 				<BaseInput
+					{form}
 					bind:value={user.passwordConfirmation}
 					let:field={{ attrs, onChange }}
-					{form}
 					schema={z.custom((v) => v === user.password, {
 						message: "Password does't match."
 					})}
@@ -151,4 +172,20 @@
 			<span>Create</span>
 		</Button>
 	</div>
+
+	<BaseDataTable
+		class="mt-4"
+		headers={[
+			{ text: 'Id', value: 'id' },
+			{ text: 'Name', value: 'name' },
+			{ text: 'Email', value: 'email' },
+			{
+				text: 'Roles',
+				value: (item) => item.userRoles?.map((v) => v.role.name).toString() || '-'
+			},
+			{ text: 'Actions', value: 'actions' }
+		]}
+		items={data.users}
+		on:delete={onDeleteUser}
+	/>
 </div>

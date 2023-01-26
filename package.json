@@ -13,14 +13,16 @@
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"dependencies": {
-		"@prisma/client": "^4.8.1",
+		"@prisma/client": "^4.9.0",
 		"@svelteuidev/composables": "^0.8.0",
 		"@svelteuidev/core": "^0.8.0",
 		"@trpc/client": "^10.9.0",
 		"@trpc/server": "^10.9.0",
+		"classnames": "^2.3.2",
 		"moment-timezone": "^0.5.40",
 		"mongoose": "^6.8.3",
 		"nodemailer": "^6.8.0",
+		"prisma": "^4.9.0",
 		"radix-icons-svelte": "^1.2.1",
 		"trpc-sveltekit": "^3.2.4",
 		"zod": "^3.20.2"
@@ -37,7 +39,6 @@
 		"postcss": "^8.4.21",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",
-		"prisma": "^4.8.1",
 		"sass": "^1.57.1",
 		"svelte": "^3.54.0",
 		"svelte-check": "^2.9.2",
